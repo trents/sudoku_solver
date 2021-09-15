@@ -1,4 +1,7 @@
 """ Sudoku solver """
+# The algorithms work very well but don't quite solve a hard puzzle
+# I use brute force after reducing a puzzle as much as possible, but it's slow
+# So, very speedy for easy/medium puzzles, slow for hard ones
 
 import math
 import random
