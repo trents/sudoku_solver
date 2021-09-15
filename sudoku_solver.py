@@ -4,41 +4,46 @@
 # So, very speedy for easy/medium puzzles, slow for hard ones
 
 import math
-import random
 import copy
 
 def find_x_wing_pairs(pair_array):
+    """ Helper function for xwing algorithm, finds location pairs for the algo """
     pair_array_return = []
     i = 0
     while i < len(pair_array):
         j = i+1
         while j < len(pair_array):
-            if pair_array[i][1] == pair_array[j][1] and pair_array[i][2] == pair_array[j][2] and pair_array[i][3] == pair_array[j][3]:
-                  pair_array_return.append([pair_array[i][1],pair_array[i][0],pair_array[j][0],pair_array[j][2],pair_array[j][3]])
+            if pair_array[i][1] == pair_array[j][1] and pair_array[i][2] == pair_array[j][2] \
+               and pair_array[i][3] == pair_array[j][3]:
+                pair_array_return.append([pair_array[i][1],pair_array[i][0],pair_array[j][0], \
+                                          pair_array[j][2],pair_array[j][3]])
             j += 1
         i += 1
     return pair_array_return
 
 def find_twice_in_row(row):
+    """ Helper function for xwing algorithm, finds values that appear only twice in rows """
     results = []
     for i in range(9):
-       temp_string = str(i)
-       count = 0
-       for item in row:
-          if temp_string in item:
-              count += 1
-       if count == 2:
-          results.append(temp_string)
+        temp_string = str(i)
+        count = 0
+        for item in row:
+            if temp_string in item:
+                count += 1
+        if count == 2:
+            results.append(temp_string)
     return results
 
 def find_twice_in_row_cols(row,item):
+    """ Helper function for xwing algorithm, finds values that appear only twice in cols """
     results = [item]
     for i in range(9):
-       if item in row[i]:
-           results.append(i)
+        if item in row[i]:
+            results.append(i)
     return results
 
 def swordfish(sudoku_grid):
+    """ Swordfish algorithm, incomplete """
     twice_in_row = []
     for i in range(9):
         twice_in_row.append(find_twice_in_row(sudoku_grid[i]))
@@ -56,7 +61,6 @@ def swordfish(sudoku_grid):
             swordfishes.append(current_sword)
 
 # identify swordfish cycles - value, row1, col, col, row2, col, col, row3, col, col
-    cycles = []
 
     for i in range(9):
         current_val = str(i+1)
@@ -64,14 +68,14 @@ def swordfish(sudoku_grid):
         for item in swordfishes:
             if item[0] == current_val:
                 temp_array.append(item)
-#        print(temp_array)
 
     return sudoku_grid
 
 def x_wing(sudoku_grid):
+    """ Xwing solving algorithm, described here: https://www.sudokuessentials.com/x-wing.html """
     twice_in_row = []
     for i in range(9):
-        twice_in_row.append(find_twice_in_row(sudoku_grid[i])) 
+        twice_in_row.append(find_twice_in_row(sudoku_grid[i]))
     twice_in_row_cols = []
     for i in range(9):
         temp = []
@@ -82,16 +86,17 @@ def x_wing(sudoku_grid):
     x_wing_pairs = find_x_wing_pairs(twice_in_row_cols)
     for item in x_wing_pairs:
         for i in range(9):
-            if i != item[1] and i != item[2]:
+            if i not in [item[1], item[2]]:
                 if item[0] in sudoku_grid[i][item[3]]:
-                        chunks = sudoku_grid[i][item[3]].split(item[0])
-                        sudoku_grid[i][item[3]] = chunks[0] + chunks[1]
+                    chunks = sudoku_grid[i][item[3]].split(item[0])
+                    sudoku_grid[i][item[3]] = chunks[0] + chunks[1]
                 if item[0] in sudoku_grid[i][item[4]]:
-                        chunks = sudoku_grid[i][item[4]].split(item[0])
-                        sudoku_grid[i][item[4]] = chunks[0] + chunks[1]
+                    chunks = sudoku_grid[i][item[4]].split(item[0])
+                    sudoku_grid[i][item[4]] = chunks[0] + chunks[1]
     return sudoku_grid
 
 def reduce_row(row,sudoku_grid):
+    """ Uses several sudoku algorithms in parallel to eliminate redundant values in a row """
     for i in range(9):
         if len(sudoku_grid[row][i]) == 1:
             for j in range(9):
@@ -114,6 +119,7 @@ def reduce_row(row,sudoku_grid):
     return sudoku_grid
 
 def reduce_col(col,sudoku_grid):
+    """ Uses several sudoku algorithms in parallel to eliminate redundant values in a column """
     for i in range(9):
         if len(sudoku_grid[i][col]) == 1:
             for j in range(9):
@@ -136,6 +142,7 @@ def reduce_col(col,sudoku_grid):
     return sudoku_grid
 
 def reduce_sub(sub,sudoku_grid):
+    """ Uses several sudoku algorithms in parallel to eliminate redundant values in a subsection """
     minigrid = []
     row = math.floor(sub/3)
     col = sub % 3
@@ -153,6 +160,7 @@ def reduce_sub(sub,sudoku_grid):
     return sudoku_grid
 
 def reduce_mini(minigrid):
+    """ Uses several sudoku algorithms in parallel to eliminate redundant values in a minigrid """
     row = []
     for i in range(3):
         for j in range(3):
@@ -177,13 +185,14 @@ def reduce_mini(minigrid):
         if count_dict[key] != "X":
             row[count_dict[key]] = key
 
-    for i in range(3):  
+    for i in range(3):
         for j in range(3):
             minigrid[i][j] = row[(i*3)+j]
 
     return minigrid
 
 def reducer(sudoku_grid):
+    """ Driver for the main reducer functions """
     for i in range(9):
         sudoku_grid = reduce_row(i,sudoku_grid)
         sudoku_grid = reduce_col(i,sudoku_grid)
@@ -191,6 +200,7 @@ def reducer(sudoku_grid):
     return sudoku_grid
 
 def validator(sudoku_grid):
+    """ Validates if a sudoku grid is acceptable """
     for i in range(9):
         checker = []
         for j in range(9):
@@ -209,7 +219,7 @@ def validator(sudoku_grid):
     return True
 
 def brute_force(sudoku_grid):
-    valid = False
+    """ Brute force when hard puzzles are partially solved; needs work! """
     temp_grid = copy.deepcopy(sudoku_grid)
     for i in range(9):
         for j in range(9):
@@ -219,9 +229,10 @@ def brute_force(sudoku_grid):
                     temp_grid = brute_force(temp_grid)
                     if validator(temp_grid):
                         return temp_grid
-    return sudoku_grid                        
+    return sudoku_grid
 
 def sudoku_solver(arr):
+    """ Overall driver """
     sudoku_grid = []
     for line in arr:
         sudoku_line = []
@@ -266,7 +277,7 @@ def sudoku_solver(arr):
     for j in range(15):
         sudoku_grid = reducer(sudoku_grid)
 
-# now that it's reduced, the last step is to simply brute force what's left with randomized entries and validate
+# now that it's reduced, the last step is to simply brute force what's left and validate
 
     sudoku_grid = x_wing(sudoku_grid)
     sudoku_grid = swordfish(sudoku_grid)
@@ -277,15 +288,17 @@ def sudoku_solver(arr):
 
     return 0
 
+# These lines just read in the data and then pass it to the driver
+
 with open("sudoku-puzzle.txt") as file:
     d = file.readlines()
 new_arr = []
-for line in d:
-    if len(line) == 9:
-        new_arr.append(line)
+for lin in d:
+    if len(lin) == 9:
+        new_arr.append(lin)
     else:
-       j = 9 - len(line)
-       for i in range(j):
-           line = line + " "
-       new_arr.append(line)
+        spot = 9 - len(lin)
+        for place in range(spot):
+            lin = lin + " "
+        new_arr.append(lin)
 print(sudoku_solver(new_arr))
